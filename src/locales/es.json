@@ -461,7 +461,8 @@
     "eraseMessage": "Movimientos, cuentas, tarjetas, metas, categorías personalizadas y toda la cartera de inversiones se borrarán de este dispositivo. No se puede deshacer.",
     "eraseConfirm": "Borrar todo",
     "erased": "Datos borrados",
-    "version": "{{app}} · versión {{version}}"
+    "version": "{{app}} · versión {{version}}",
+    "privacyPolicy": "Política de privacidad"
   },
   "appearance": {
     "title": "Apariencia",

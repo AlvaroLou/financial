@@ -461,7 +461,8 @@
     "eraseMessage": "Movimenti, conti, carte, obiettivi, categorie personalizzate e l'intero portafoglio di investimenti verranno cancellati da questo dispositivo. Non si può annullare.",
     "eraseConfirm": "Cancella tutto",
     "erased": "Dati cancellati",
-    "version": "{{app}} · versione {{version}}"
+    "version": "{{app}} · versione {{version}}",
+    "privacyPolicy": "Informativa sulla privacy"
   },
   "appearance": {
     "title": "Aspetto",

@@ -3,25 +3,31 @@
     "name": "Dinheiro em Dia",
     "slug": "dinheiro-em-dia",
     "scheme": "dinheiroemdia",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.example.dinheiroemdia",
+      "bundleIdentifier": "com.dinheiroemdia.app",
       "infoPlist": {
         "NSFaceIDUsageDescription": "Use o Face ID para desbloquear o app."
       }
     },
     "android": {
-      "package": "com.example.dinheiroemdia",
+      "package": "com.dinheiroemdia.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#173E32",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -48,7 +54,8 @@
       "expo-localization",
       "expo-secure-store",
       "./plugins/withWindowsCmake",
-      "./plugins/withGradleMemory"
+      "./plugins/withGradleMemory",
+      "./plugins/withReleaseSigning"
     ]
   }
 }

@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dinheiro em Dia · Política de privacidade</title>
+<meta name="description" content="Política de privacidade do app Dinheiro em Dia: seus dados ficam só no seu aparelho.">
+<style>
+  :root {
+    --bg: #F6F8F7;
+    --card: #FFFFFF;
+    --ink: #14231D;
+    --ink2: #4A5A53;
+    --line: #DCE4E0;
+    --accent: #21644C;
+    --hero: #173E32;
+    --on-hero: #F2F7F4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0F1613;
+      --card: #16201C;
+      --ink: #E7EFEB;
+      --ink2: #A7B6AF;
+      --line: #26342E;
+      --accent: #6FCBA5;
+      --hero: #173E32;
+      --on-hero: #F2F7F4;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  header {
+    background: var(--hero);
+    color: var(--on-hero);
+    padding: 40px 16px 32px;
+  }
+  header .wrap, main { max-width: 720px; margin: 0 auto; }
+  header h1 { margin: 0 0 4px; font-size: 1.75rem; line-height: 1.25; }
+  header p { margin: 0; opacity: .85; }
+  nav { margin-top: 16px; display: flex; gap: 16px; flex-wrap: wrap; }
+  nav a { color: var(--on-hero); }
+  main { padding: 24px 16px 48px; }
+  section.lang + section.lang { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--line); }
+  h2 { font-size: 1.35rem; margin: 0 0 8px; }
+  h3 { font-size: 1.05rem; margin: 28px 0 6px; }
+  p, li { color: var(--ink); }
+  .muted { color: var(--ink2); font-size: .925rem; }
+  .summary {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--accent);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin: 16px 0 8px;
+  }
+  .summary p { margin: 0; }
+  ul { padding-left: 1.25rem; }
+  li + li { margin-top: 6px; }
+  a { color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: .95rem; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  th { color: var(--ink2); font-weight: 600; }
+  .table-scroll { overflow-x: auto; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Dinheiro em Dia</h1>
+    <p>Política de privacidade · Privacy policy</p>
+    <nav>
+      <a href="#pt">Português</a>
+      <a href="#en">English</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="lang" id="pt" lang="pt-BR">
+    <h2>Política de privacidade</h2>
+    <p class="muted">Vigente desde 26 de novembro de 2026</p>
+
+    <div class="summary">
+      <p><strong>Em resumo:</strong> o Dinheiro em Dia não tem cadastro, não tem servidor próprio, não exibe anúncios e não usa ferramentas de análise ou rastreamento. Tudo o que você registra fica salvo só no seu aparelho.</p>
+    </div>
+
+    <h3>1. Dados que você registra</h3>
+    <p>Lançamentos, categorias, contas e cartões, metas, investimentos, operações e preferências ficam guardados apenas no armazenamento interno do app, no seu aparelho. Eles não são enviados ao desenvolvedor nem a terceiros, e o desenvolvedor não tem acesso a eles.</p>
+
+    <h3>2. Conexões com a internet</h3>
+    <p>O app usa a internet só para buscar taxas e cotações. Nessas consultas, ele envia apenas o necessário para cada serviço:</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Serviço</th><th>O que é enviado</th><th>Para quê</th></tr></thead>
+        <tbody>
+          <tr><td><a href="https://www.bcb.gov.br/">Banco Central do Brasil</a> (SGS)</td><td>Código da série (CDI, Selic, IPCA) e o período</td><td>Taxas e índices</td></tr>
+          <tr><td><a href="https://brapi.dev/">brapi.dev</a></td><td>Códigos dos ativos da B3 que você cadastrou (ex.: PETR4) e o seu token da brapi, se você informar um</td><td>Cotações de ações, FIIs, ETFs e BDRs</td></tr>
+          <tr><td><a href="https://www.coingecko.com/">CoinGecko</a></td><td>Identificadores das criptomoedas que você cadastrou, o texto da busca de moedas e a sua chave da CoinGecko, se você informar uma</td><td>Cotações de criptomoedas</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Nenhum valor, quantidade, saldo ou dado pessoal é enviado. Como em qualquer acesso à internet, esses serviços recebem o endereço IP do aparelho. O tratamento desses dados segue a política de privacidade de cada serviço. Sem internet, o app continua funcionando com os últimos valores salvos ou com os valores que você digitar.</p>
+
+    <h3>3. Chaves das APIs</h3>
+    <p>Os tokens da brapi e da CoinGecko são opcionais. Quando informados, ficam no armazenamento seguro do sistema (Android Keystore) e são usados apenas nas consultas aos próprios serviços.</p>
+
+    <h3>4. Biometria</h3>
+    <p>O desbloqueio por biometria é feito pelo sistema operacional. O app recebe apenas a resposta "autenticado" ou "não autenticado" e nunca tem acesso às suas digitais ou ao seu rosto.</p>
+
+    <h3>5. Exportação de relatórios</h3>
+    <p>Os relatórios em PDF e CSV são gerados no próprio aparelho. Eles só saem dele se você escolher compartilhá-los, e apenas para o destino que você escolher na tela de compartilhamento do sistema.</p>
+
+    <h3>6. Backup do Android</h3>
+    <p>Se o backup do Android estiver ativado no seu aparelho, o sistema pode incluir os dados do app na cópia de segurança da sua conta Google. Esse backup é feito pelo Google, segundo as configurações do seu aparelho. As chaves das APIs ficam de fora dele.</p>
+
+    <h3>7. Como apagar seus dados</h3>
+    <p>Em <em>Ajustes › Apagar todos os dados</em> (ou <em>Mais › Apagar todos os dados</em>), você apaga os lançamentos, a carteira, as cotações salvas e as chaves das APIs. Desinstalar o app também remove todos os dados dele do aparelho.</p>
+
+    <h3>8. Crianças</h3>
+    <p>O app não é direcionado a menores de 13 anos e não coleta dados de ninguém, inclusive de crianças.</p>
+
+    <h3>9. Seus direitos (LGPD)</h3>
+    <p>Como o desenvolvedor não coleta nem armazena dados pessoais, não há dados seus em poder dele para acessar, corrigir ou excluir. Os dados ficam sob o seu controle, no seu aparelho.</p>
+
+    <h3>10. Mudanças nesta política</h3>
+    <p>Se o app passar a tratar dados de outra forma, esta página será atualizada antes, com a nova data de vigência.</p>
+
+    <h3>11. Contato</h3>
+    <p>Dúvidas sobre privacidade: abra uma mensagem em <a href="https://github.com/AlvaroLou/financial/issues">github.com/AlvaroLou/financial/issues</a>.</p>
+  </section>
+
+  <section class="lang" id="en" lang="en">
+    <h2>Privacy policy</h2>
+    <p class="muted">Effective November 26, 2026</p>
+
+    <div class="summary">
+      <p><strong>In short:</strong> Dinheiro em Dia has no sign-up and no server of its own. It shows no ads and uses no analytics or tracking tools. Everything you record stays on your device.</p>
+    </div>
+
+    <h3>1. Data you enter</h3>
+    <p>Transactions, categories, accounts and cards, goals, investments, trades and preferences are stored only in the app's internal storage on your device. They are not sent to the developer or to third parties, and the developer has no access to them.</p>
+
+    <h3>2. Internet connections</h3>
+    <p>The app uses the internet only to fetch rates and market prices, and each service receives only what it needs:</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Service</th><th>What is sent</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><a href="https://www.bcb.gov.br/">Central Bank of Brazil</a> (SGS)</td><td>Series code (CDI, Selic, IPCA) and date range</td><td>Interest rates and inflation</td></tr>
+          <tr><td><a href="https://brapi.dev/">brapi.dev</a></td><td>Tickers of the B3 assets you added (e.g. PETR4) and your brapi token, if you provide one</td><td>Stock, REIT, ETF and BDR prices</td></tr>
+          <tr><td><a href="https://www.coingecko.com/">CoinGecko</a></td><td>IDs of the cryptocurrencies you added, the coin search text, and your CoinGecko key, if you provide one</td><td>Crypto prices</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>No amounts, quantities, balances or personal data are sent. As with any internet request, these services receive your device's IP address, which they handle under their own privacy policies. Offline, the app keeps working with the last saved values or the values you type in.</p>
+
+    <h3>3. API keys</h3>
+    <p>The brapi and CoinGecko keys are optional. If you add them, they are kept in the system's secure storage (Android Keystore) and used only to call those services.</p>
+
+    <h3>4. Biometrics</h3>
+    <p>Biometric unlock is handled by the operating system. The app only receives "authenticated" or "not authenticated" and never has access to your fingerprints or face data.</p>
+
+    <h3>5. Exported reports</h3>
+    <p>PDF and CSV reports are created on your device. They leave it only when you share them, and only to the destination you pick in the system share sheet.</p>
+
+    <h3>6. Android backup</h3>
+    <p>If Android backup is turned on, the system may include the app's data in your Google account backup. This backup is run by Google according to your device settings. API keys are excluded from it.</p>
+
+    <h3>7. Deleting your data</h3>
+    <p><em>Settings › Erase all data</em> (or <em>More › Erase all data</em>) deletes your transactions, portfolio, saved prices and API keys. Uninstalling the app also removes all of its data from the device.</p>
+
+    <h3>8. Children</h3>
+    <p>The app is not directed at children under 13 and collects no data from anyone, including children.</p>
+
+    <h3>9. Your rights</h3>
+    <p>Since the developer collects and stores no personal data, the developer holds no data about you to access, correct or delete. Your data stays under your control, on your device.</p>
+
+    <h3>10. Changes to this policy</h3>
+    <p>If the app ever handles data differently, this page will be updated first, with a new effective date.</p>
+
+    <h3>11. Contact</h3>
+    <p>Privacy questions: open an issue at <a href="https://github.com/AlvaroLou/financial/issues">github.com/AlvaroLou/financial/issues</a>.</p>
+  </section>
+</main>
+</body>
+</html>

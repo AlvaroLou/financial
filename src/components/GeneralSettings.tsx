@@ -2,7 +2,7 @@ import Constants from 'expo-constants';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
+import { Linking, View } from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
 import { useDialog } from '@/components/ui/Dialog';
@@ -15,6 +15,9 @@ import { clearProviderKeys } from '@/invest/services/secrets';
 import { useInvestStore, useMarketStore } from '@/invest/store';
 import { useFinanceStore } from '@/store/useFinanceStore';
 import { useTheme } from '@/theme/ThemeProvider';
+
+/** Página pública da política de privacidade (GitHub Pages, `docs/privacidade.html`). A Play exige o link também no app. */
+export const PRIVACY_POLICY_URL = 'https://alvarolou.github.io/financial/privacidade.html';
 
 /**
  * Preferências que valem para os DOIS apps: aparência (modo e cores), idioma,
@@ -112,6 +115,14 @@ export function GeneralSettings() {
             description={t('settings.hideValuesHint')}
             value={settings.ocultarSaldo}
             onChange={(v) => updateSettings({ ocultarSaldo: v })}
+          />
+        </Card>
+        <Card style={{ overflow: 'hidden', marginTop: 12 }}>
+          <ListRow
+            first
+            icon="shield"
+            title={t('settings.privacyPolicy')}
+            onPress={() => void Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})}
           />
         </Card>
       </View>

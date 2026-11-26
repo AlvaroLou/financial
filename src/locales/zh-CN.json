@@ -456,7 +456,8 @@
     "eraseMessage": "记账、账户、信用卡、目标、自定义类别以及整个投资组合都将从本设备清除，且无法撤销。",
     "eraseConfirm": "全部清除",
     "erased": "数据已清除",
-    "version": "{{app}} · 版本 {{version}}"
+    "version": "{{app}} · 版本 {{version}}",
+    "privacyPolicy": "隐私政策"
   },
   "appearance": {
     "title": "外观",

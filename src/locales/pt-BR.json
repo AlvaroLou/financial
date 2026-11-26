@@ -461,7 +461,8 @@
     "eraseMessage": "Lançamentos, contas, cartões, metas, categorias personalizadas e toda a carteira de investimentos serão apagados deste aparelho. Não dá para desfazer.",
     "eraseConfirm": "Apagar tudo",
     "erased": "Dados apagados",
-    "version": "{{app}} · versão {{version}}"
+    "version": "{{app}} · versão {{version}}",
+    "privacyPolicy": "Política de privacidade"
   },
   "appearance": {
     "title": "Aparência",

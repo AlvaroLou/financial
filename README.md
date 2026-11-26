@@ -29,13 +29,25 @@ Requisitos: Node 20+ e o app **Expo Go** (ou um emulador) — ou só um navegado
 ### APK de release (Android)
 
 - Requisitos: Android Studio (JDK em `JAVA_HOME`) e o Android SDK (`ANDROID_HOME`).
-- O APK sai em `android/app/build/outputs/apk/release/app-release.apk`. Ele é assinado com a chave de debug: serve para instalar no celular, mas a Play Store exige uma chave própria.
+- O APK sai em `android/app/build/outputs/apk/release/app-release.apk`. Sem a chave de upload configurada, ele é assinado com a chave de debug: serve para instalar no celular, mas não para a Play Store.
 - Para um build mais rápido, só para celulares atuais: `./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a`.
 - A pasta `android/` é **gerada** pelo `expo prebuild` e fica fora do git. Ajustes nativos vão em `app.json` ou em `plugins/`, nunca direto em `android/`.
 - Windows: o CMake padrão (3.22.1) não aceita caminhos acima de 260 caracteres. Sem ajuste, o build falha com `ninja: error: mkdir(...)` ou `Filename longer than 260 characters`. `plugins/withWindowsCmake.js` fixa o CMake 3.31.6, cujo Ninja aceita caminhos longos. Para funcionar, é preciso:
   - caminhos longos habilitados no Windows (`LongPathsEnabled` = 1);
   - o pacote "CMake 3.31.6" (Android Studio › SDK Manager › SDK Tools). O Gradle tenta baixá-lo se faltar.
+- Permissões que o app não usa (`SYSTEM_ALERT_WINDOW` e armazenamento externo) ficam bloqueadas em `android.blockedPermissions`, no `app.json`.
 - `react-native-reanimated`, `react-native-worklets` e `react-native-gesture-handler` ficam nas versões do SDK 58 (`npx expo install …`). O app não os usa diretamente, mas o expo-router os puxa como dependências (peers do `react-native-drawer-layout`), então eles entram no build de qualquer jeito.
+
+### Play Store (AAB assinado)
+
+Guia completo, com textos da loja, formulários da Play Console e liberação: **[store/play-store.md](store/play-store.md)**.
+
+- ID do app: `com.dinheiroemdia.app`. É **definitivo**: depois de publicado, não muda mais.
+- `plugins/withReleaseSigning.js` assina o release com a chave de upload. A chave e as senhas vêm de `DINHEIRO_UPLOAD_*` em `~/.gradle/gradle.properties`, **fora do repositório**. Sem elas, o `bundleRelease` para com uma mensagem, e o APK continua com a chave de debug.
+- Build: `npx expo prebuild --platform android --clean`, depois `cd android` e `.\gradlew bundleRelease` (PowerShell) ou `./gradlew bundleRelease` (Git Bash). O pacote sai em `android/app/build/outputs/bundle/release/app-release.aab`.
+- **A cada versão**, aumente `expo.android.versionCode` (+1) e ajuste `expo.version` no `app.json`.
+- A política de privacidade fica em `docs/privacidade.html` (GitHub Pages, servindo `main` / `/docs`), com link em Ajustes › Privacidade (`PRIVACY_POLICY_URL` em `components/GeneralSettings.tsx`). Se o app passar a enviar dados para fora do aparelho, atualize essa página e o formulário de Segurança dos dados.
+- `store/`: ícone da loja (512×512), gráfico de destaque (1024×500) e o guia.
 
 ## Telas
 

@@ -461,7 +461,8 @@
     "eraseMessage": "Opérations, comptes, cartes, objectifs, catégories personnalisées et tout le portefeuille de placements seront effacés de cet appareil. C'est irréversible.",
     "eraseConfirm": "Tout effacer",
     "erased": "Données effacées",
-    "version": "{{app}} · version {{version}}"
+    "version": "{{app}} · version {{version}}",
+    "privacyPolicy": "Politique de confidentialité"
   },
   "appearance": {
     "title": "Apparence",

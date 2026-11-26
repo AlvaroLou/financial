@@ -461,7 +461,8 @@
     "eraseMessage": "Entries, accounts, cards, goals, custom categories and your whole investment portfolio will be erased from this device. This can't be undone.",
     "eraseConfirm": "Erase everything",
     "erased": "Data erased",
-    "version": "{{app}} · version {{version}}"
+    "version": "{{app}} · version {{version}}",
+    "privacyPolicy": "Privacy policy"
   },
   "appearance": {
     "title": "Appearance",

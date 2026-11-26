@@ -456,7 +456,8 @@
     "eraseMessage": "記録、口座、カード、目標、独自のカテゴリ、そして投資ポートフォリオのすべてがこの端末から消去されます。元に戻せません。",
     "eraseConfirm": "すべて消去",
     "erased": "データを消去しました",
-    "version": "{{app}} · バージョン {{version}}"
+    "version": "{{app}} · バージョン {{version}}",
+    "privacyPolicy": "プライバシーポリシー"
   },
   "appearance": {
     "title": "外観",

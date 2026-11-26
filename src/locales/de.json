@@ -461,7 +461,8 @@
     "eraseMessage": "Buchungen, Konten, Karten, Ziele, eigene Kategorien und das gesamte Depot werden von diesem Gerät gelöscht. Das lässt sich nicht rückgängig machen.",
     "eraseConfirm": "Alles löschen",
     "erased": "Daten gelöscht",
-    "version": "{{app}} · Version {{version}}"
+    "version": "{{app}} · Version {{version}}",
+    "privacyPolicy": "Datenschutzerklärung"
   },
   "appearance": {
     "title": "Darstellung",
