@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "Dinheiro em Dia",
+    "slug": "dinheiro-em-dia",
+    "scheme": "dinheiroemdia",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.example.dinheiroemdia",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Use o Face ID para desbloquear o app."
+      }
+    },
+    "android": {
+      "package": "com.example.dinheiroemdia",
+      "adaptiveIcon": {
+        "backgroundColor": "#173E32",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "resizeMode": "contain",
+          "backgroundColor": "#173E32"
+        }
+      ],
+      "expo-font",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Use o Face ID para desbloquear o app."
+        }
+      ],
+      "expo-localization",
+      "expo-secure-store"
+    ]
+  }
+}

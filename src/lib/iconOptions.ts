@@ -1,0 +1,53 @@
+import type { IconName } from '@/components/ui/Icon';
+
+/** Ícones oferecidos ao criar/editar categorias (o nome para leitores de tela vem de `icons.<key>`). */
+export const CATEGORY_ICONS: { icon: IconName; key: string }[] = [
+  { icon: 'home', key: 'house' },
+  { icon: 'utensils', key: 'meal' },
+  { icon: 'cart', key: 'groceries' },
+  { icon: 'shopping', key: 'shopping' },
+  { icon: 'car', key: 'car' },
+  { icon: 'bus', key: 'bus' },
+  { icon: 'gas', key: 'fuel' },
+  { icon: 'heart', key: 'health' },
+  { icon: 'hospital', key: 'hospital' },
+  { icon: 'film', key: 'leisure' },
+  { icon: 'gamepad', key: 'games' },
+  { icon: 'music', key: 'music' },
+  { icon: 'school', key: 'studies' },
+  { icon: 'book', key: 'books' },
+  { icon: 'dumbbell', key: 'gym' },
+  { icon: 'coffee', key: 'coffee' },
+  { icon: 'wifi', key: 'internet' },
+  { icon: 'phone', key: 'phone' },
+  { icon: 'lightning', key: 'power' },
+  { icon: 'water', key: 'water' },
+  { icon: 'laptop', key: 'electronics' },
+  { icon: 'tshirt', key: 'clothes' },
+  { icon: 'plane', key: 'travel' },
+  { icon: 'gift', key: 'gift' },
+  { icon: 'ticket', key: 'tickets' },
+  { icon: 'paw', key: 'pets' },
+  { icon: 'baby', key: 'kids' },
+  { icon: 'tools', key: 'repairs' },
+  { icon: 'card', key: 'card' },
+  { icon: 'briefcase', key: 'work' },
+  { icon: 'cash', key: 'money' },
+  { icon: 'piggy', key: 'investments' },
+  { icon: 'dots', key: 'other' },
+];
+
+/** Ícones das metas. */
+export const GOAL_ICONS: { icon: IconName; key: string }[] = [
+  { icon: 'piggy', key: 'piggy' },
+  { icon: 'shield', key: 'emergency' },
+  { icon: 'plane', key: 'travel' },
+  { icon: 'home', key: 'house' },
+  { icon: 'car', key: 'car' },
+  { icon: 'laptop', key: 'electronics' },
+  { icon: 'school', key: 'studies' },
+  { icon: 'gift', key: 'gift' },
+  { icon: 'heart', key: 'health' },
+  { icon: 'pension', key: 'retirement' },
+  { icon: 'target', key: 'otherGoal' },
+];
