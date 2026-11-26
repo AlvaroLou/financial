@@ -1,8 +1,10 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useColorScheme } from 'react-native';
 
 import { useFinanceStore } from '@/store/useFinanceStore';
 import { buildColors, type AppId, type ThemeBase, type ThemeColors } from '@/theme/palette';
+import { usesSystemFont } from '@/theme/typography';
 
 /**
  * Tema do app ("dois apps em um"): a base (claro/escuro/automático) é global e
@@ -10,11 +12,13 @@ import { buildColors, type AppId, type ThemeBase, type ThemeColors } from '@/the
  * `<ThemeScope app="…">`; fora dele (telas modais), vale o app aberto por último.
  *
  * Uso: `const { colors } = useTheme()` e `useThemedStyles(makeStyles)` — os
- * estilos são recriados quando o tema muda.
+ * estilos são recriados quando o tema muda. `systemFont` indica que o idioma
+ * (chinês, japonês, coreano) usa a fonte do sistema no lugar da Inter.
  */
 interface ThemeState {
   base: ThemeBase;
   palettes: Record<AppId, ThemeColors>;
+  systemFont: boolean;
 }
 
 const ThemeStateContext = createContext<ThemeState | null>(null);
@@ -26,11 +30,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const accentInvest = useFinanceStore((s) => s.settings.accentInvest);
   const appMode = useFinanceStore((s) => s.settings.appMode);
   const system = useColorScheme();
+  const { i18n } = useTranslation();
+  const systemFont = usesSystemFont(i18n.resolvedLanguage ?? i18n.language);
 
   const base: ThemeBase = themeMode === 'auto' ? (system === 'dark' ? 'dark' : 'light') : themeMode;
   const orcamento = useMemo(() => buildColors(accentOrcamento, base), [accentOrcamento, base]);
   const investimentos = useMemo(() => buildColors(accentInvest, base), [accentInvest, base]);
-  const state = useMemo(() => ({ base, palettes: { orcamento, investimentos } }), [base, orcamento, investimentos]);
+  const state = useMemo(
+    () => ({ base, palettes: { orcamento, investimentos }, systemFont }),
+    [base, orcamento, investimentos, systemFont],
+  );
 
   return (
     <ThemeStateContext.Provider value={state}>
@@ -44,11 +53,17 @@ export function ThemeScope({ app, children }: { app: AppId; children: ReactNode 
   return <AppScopeContext.Provider value={app}>{children}</AppScopeContext.Provider>;
 }
 
-export function useTheme(): { colors: ThemeColors; base: ThemeBase; app: AppId; palettes: Record<AppId, ThemeColors> } {
+export function useTheme(): {
+  colors: ThemeColors;
+  base: ThemeBase;
+  app: AppId;
+  palettes: Record<AppId, ThemeColors>;
+  systemFont: boolean;
+} {
   const state = useContext(ThemeStateContext);
   const app = useContext(AppScopeContext) ?? 'orcamento';
   if (!state) throw new Error('useTheme deve ser usado dentro de <ThemeProvider>.');
-  return { colors: state.palettes[app], base: state.base, app, palettes: state.palettes };
+  return { colors: state.palettes[app], base: state.base, app, palettes: state.palettes, systemFont: state.systemFont };
 }
 
 /** `const styles = useThemedStyles(makeStyles)` — `factory` deve ser uma função de módulo (estável). */

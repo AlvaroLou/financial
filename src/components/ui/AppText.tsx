@@ -1,7 +1,11 @@
-import { Text, type TextProps, type TextStyle } from 'react-native';
+import { Platform, StyleSheet, Text, type TextProps, type TextStyle } from 'react-native';
 
 import { useTheme } from '@/theme/ThemeProvider';
 import { fonts } from '@/theme/tokens';
+import { systemFontStyle } from '@/theme/typography';
+
+/** fonte do sistema (chinês, japonês, coreano); na web, o RN-web troca "System" pela pilha do sistema */
+const SYSTEM_FAMILY = Platform.select({ android: 'sans-serif', default: 'System' });
 
 export type TextVariant =
   | 'display'
@@ -44,7 +48,8 @@ interface AppTextProps extends TextProps {
 }
 
 export function AppText({ variant = 'body', color, tabular = false, align, style, ...rest }: AppTextProps) {
-  const { colors } = useTheme();
+  const { colors, systemFont } = useTheme();
+  const script = systemFont ? systemFontStyle(StyleSheet.flatten([variants[variant], style]) ?? {}, SYSTEM_FAMILY) : null;
   return (
     <Text
       {...rest}
@@ -54,6 +59,7 @@ export function AppText({ variant = 'body', color, tabular = false, align, style
         tabular && { fontVariant: ['tabular-nums'] },
         align ? { textAlign: align } : null,
         style,
+        script,
       ]}
     />
   );

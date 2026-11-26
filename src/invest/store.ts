@@ -180,9 +180,9 @@ export const useInvestStore = create<PortfolioState>()(
  * de partida: o app avisa "valor padrão" até buscar as taxas ou o usuário digitar.
  */
 export const DEFAULT_RATES: RateState = {
-  cdiAnual: 0.149,
-  selicMeta: 0.15,
-  ipca12m: 0.045,
+  cdiAnual: 0.1365,
+  selicMeta: 0.1375,
+  ipca12m: 0.0463,
   origem: 'padrao',
   cdiDiario: {},
   selicDiaria: {},

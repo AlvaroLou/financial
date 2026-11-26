@@ -1,23 +1,27 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
 import { DateField } from '@/components/ui/DateField';
 import { useDialog } from '@/components/ui/Dialog';
 import { MoneyInput, SelectField, SwitchRow, TextField } from '@/components/ui/Fields';
+import { FormScreen } from '@/components/ui/FormScreen';
 import { Icon } from '@/components/ui/Icon';
-import { Button, Chip, IconButton, Segmented, Tag } from '@/components/ui/primitives';
-import { Screen } from '@/components/ui/Screen';
+import { Button, Chip, Segmented, Tag } from '@/components/ui/primitives';
 import { useSnackbar } from '@/components/ui/Snackbar';
+import { CARD_CATEGORY_ID } from '@/data/defaults';
 import { useRecordActions } from '@/hooks/useRecordActions';
+import { categoryName, natureLabelFor, paymentLabel } from '@/i18n/labels';
 import { todayISO } from '@/lib/clock';
 import { addDays, displayDate, monthIndex, monthLabel, ymOf } from '@/lib/dates';
-import { installmentValue, isRecurring, monthlyValue } from '@/lib/finance';
-import { PAYMENT_LABEL, PAYMENT_ORDER } from '@/lib/labels';
+import { installmentValue, isRecurring, monthlyValue, recordTags } from '@/lib/finance';
+import { PAYMENT_ORDER } from '@/lib/labels';
 import { brl } from '@/lib/money';
 import { useFinanceStore, type RecordInput } from '@/store/useFinanceStore';
-import { colors, layout } from '@/theme/tokens';
+import type { ThemeColors } from '@/theme/palette';
+import { useTheme, useThemedStyles } from '@/theme/ThemeProvider';
 import type { FinanceRecord, ISODate, Nature, PaymentMethod, RecordKind, YM } from '@/types';
 
 interface Form {
@@ -26,6 +30,7 @@ interface Form {
   nome: string;
   descricao: string;
   categoriaId: string;
+  etiquetas: string[];
   natureza: Nature;
   forma: PaymentMethod;
   data: ISODate;
@@ -48,6 +53,7 @@ function toForm(r: FinanceRecord): Form {
     nome: r.nome,
     descricao: r.descricao,
     categoriaId: r.categoriaId,
+    etiquetas: recordTags(r),
     natureza: r.natureza,
     forma: r.forma,
     data: r.data,
@@ -61,6 +67,9 @@ function toForm(r: FinanceRecord): Form {
 }
 
 export default function RegistroScreen() {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const { id, ym: ymParam } = useLocalSearchParams<{ id?: string; ym?: string }>();
   const showSnackbar = useSnackbar();
@@ -76,7 +85,7 @@ export default function RegistroScreen() {
 
   const [form, setForm] = useState<Form>(() => {
     if (existing) return toForm(existing);
-    const first = categories.find((c) => c.kind === 'despesa') ?? categories[0];
+    const first = categories.find((c) => c.kind === 'despesa' && !c.fixa) ?? categories[0];
     const data = todayISO();
     return {
       kind: 'despesa',
@@ -84,6 +93,7 @@ export default function RegistroScreen() {
       nome: '',
       descricao: '',
       categoriaId: first?.id ?? '',
+      etiquetas: [],
       natureza: first?.naturezaPadrao ?? 'variavel',
       forma: 'pix',
       data,
@@ -95,19 +105,24 @@ export default function RegistroScreen() {
     };
   });
   const initialForm = useRef(form);
+  /** a etiqueta "Cartão" foi posta automaticamente (ao escolher Crédito)? */
+  const autoCardTag = useRef(false);
   const [errors, setErrors] = useState<Errors>({});
 
   const set = <K extends keyof Form>(key: K, value: Form[K]) => setForm((f) => ({ ...f, [key]: value }));
 
-  const visibleCategories = useMemo(() => categories.filter((c) => c.kind === form.kind), [categories, form.kind]);
+  const sameKind = useMemo(() => categories.filter((c) => c.kind === form.kind), [categories, form.kind]);
+  const hasCardCategory = categories.some((c) => c.id === CARD_CATEGORY_ID);
 
   const changeKind = (kind: RecordKind) => {
     if (kind === form.kind) return;
-    const first = categories.find((c) => c.kind === kind);
+    const first = categories.find((c) => c.kind === kind && !c.fixa) ?? categories.find((c) => c.kind === kind);
+    autoCardTag.current = false;
     setForm((f) => ({
       ...f,
       kind,
       categoriaId: first?.id ?? f.categoriaId,
+      etiquetas: [],
       natureza: first?.naturezaPadrao ?? f.natureza,
       parcelado: kind === 'receita' ? false : f.parcelado,
     }));
@@ -115,7 +130,36 @@ export default function RegistroScreen() {
 
   const pickCategory = (categoriaId: string) => {
     const c = categories.find((x) => x.id === categoriaId);
-    setForm((f) => ({ ...f, categoriaId, natureza: c?.naturezaPadrao ?? f.natureza }));
+    setForm((f) => ({
+      ...f,
+      categoriaId,
+      etiquetas: f.etiquetas.filter((e) => e !== categoriaId),
+      natureza: c?.naturezaPadrao ?? f.natureza,
+    }));
+  };
+
+  const toggleTag = (tagId: string) => {
+    if (tagId === CARD_CATEGORY_ID) autoCardTag.current = false;
+    setForm((f) => ({
+      ...f,
+      etiquetas: f.etiquetas.includes(tagId) ? f.etiquetas.filter((e) => e !== tagId) : [...f.etiquetas, tagId],
+    }));
+  };
+
+  // Crédito põe a etiqueta "Cartão" automaticamente (e tira se trocar de volta, caso tenha sido automática)
+  const changeForma = (forma: PaymentMethod) => {
+    setForm((f) => {
+      let etiquetas = f.etiquetas;
+      const canTag = f.kind === 'despesa' && hasCardCategory && f.categoriaId !== CARD_CATEGORY_ID;
+      if (forma === 'credito' && canTag && !etiquetas.includes(CARD_CATEGORY_ID)) {
+        etiquetas = [...etiquetas, CARD_CATEGORY_ID];
+        autoCardTag.current = true;
+      } else if (forma !== 'credito' && autoCardTag.current) {
+        etiquetas = etiquetas.filter((e) => e !== CARD_CATEGORY_ID);
+        autoCardTag.current = false;
+      }
+      return { ...f, forma, etiquetas };
+    });
   };
 
   // parcelado e recorrente são excludentes
@@ -143,19 +187,20 @@ export default function RegistroScreen() {
 
   const validate = (): boolean => {
     const next: Errors = {};
-    if (form.valorTotal <= 0) next.valor = 'Informe um valor maior que zero.';
-    if (form.nome.trim() === '') next.nome = 'Dê um nome ao lançamento.';
+    if (form.valorTotal <= 0) next.valor = t('form.valueError');
+    if (form.nome.trim() === '') next.nome = t('form.nameError');
     if (form.parcelado) {
-      if (total < 2) next.parcelasTotais = 'Use 2 ou mais parcelas.';
-      if (atual < 1 || (total >= 2 && atual > total)) next.parcelaAtual = `Informe um valor entre 1 e ${Math.max(total, 1)}.`;
+      if (total < 2) next.parcelasTotais = t('form.installmentsMinError');
+      if (atual < 1 || (total >= 2 && atual > total)) next.parcelaAtual = t('form.installmentRangeError', { max: Math.max(total, 1) });
     }
-    if (needsDue && form.vencimento < form.data) next.vencimento = 'O vencimento não pode ser antes da data do lançamento.';
+    if (needsDue && form.vencimento < form.data) next.vencimento = t('form.dueError');
     setErrors(next);
     return Object.keys(next).length === 0;
   };
 
   const save = () => {
     if (!validate()) return;
+    const tags = form.etiquetas.filter((e) => e !== form.categoriaId && sameKind.some((c) => c.id === e));
     const input: RecordInput = {
       kind: form.kind,
       nome: form.nome.trim(),
@@ -165,6 +210,7 @@ export default function RegistroScreen() {
       forma: form.forma,
       data: form.data,
       categoriaId: form.categoriaId,
+      etiquetas: tags.length ? tags : undefined,
       // mantém o ícone personalizado só se a categoria não mudou
       icone: existing && existing.categoriaId === form.categoriaId ? existing.icone : undefined,
       parcelado: form.parcelado,
@@ -180,23 +226,8 @@ export default function RegistroScreen() {
     };
     if (existing) updateRecord(existing.id, input);
     else addRecord(input);
-    showSnackbar({ message: isEditing ? 'Lançamento atualizado' : 'Lançamento salvo' });
+    showSnackbar({ message: isEditing ? t('form.updated') : t('form.saved') });
     router.back();
-  };
-
-  const close = () => {
-    if (JSON.stringify(form) === JSON.stringify(initialForm.current)) {
-      router.back();
-      return;
-    }
-    ask({
-      title: 'Descartar alterações?',
-      message: 'O que você preencheu não será salvo.',
-      actions: [
-        { label: 'Descartar', style: 'destructive', onPress: () => router.back() },
-        { label: 'Continuar', style: 'cancel' },
-      ],
-    });
   };
 
   const confirmDelete = () => {
@@ -208,238 +239,242 @@ export default function RegistroScreen() {
       return;
     }
     ask({
-      title: 'Excluir lançamento?',
-      message: `"${existing.nome}" será removido${isRecurring(existing) ? ' de todos os meses' : ''}. Você poderá desfazer em seguida.`,
+      title: t('form.deleteTitle'),
+      message: isRecurring(existing)
+        ? t('form.deleteMessageRecurring', { name: existing.nome })
+        : t('form.deleteMessage', { name: existing.nome }),
       actions: [
         {
-          label: 'Excluir',
+          label: t('common.delete'),
           style: 'destructive',
           onPress: () => {
             router.back();
             remove(existing.id);
           },
         },
-        { label: 'Cancelar', style: 'cancel' },
+        { label: t('common.cancel'), style: 'cancel' },
       ],
     });
   };
 
   const isExpense = form.kind === 'despesa';
+  const tagOptions = sameKind.filter((c) => c.id !== form.categoriaId);
 
   return (
-    <Screen edges={['top', 'bottom']}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingTop: 8, gap: 4 }}>
-        <IconButton icon="close" label="Fechar" onPress={close} />
-        <AppText variant="h2" accessibilityRole="header" style={{ flex: 1 }}>
-          {isEditing ? 'Editar lançamento' : 'Novo lançamento'}
+    <FormScreen
+      title={isEditing ? t('form.editTitle') : t('form.newTitle')}
+      dirty={JSON.stringify(form) !== JSON.stringify(initialForm.current)}
+      onSave={save}
+      saveLabel={isEditing ? t('common.saveChanges') : t('form.saveNew')}
+      onDelete={isEditing ? confirmDelete : undefined}
+      deleteLabel={t('form.deleteA11y')}
+    >
+      <Segmented
+        accessibilityLabel={t('form.kindA11y')}
+        value={form.kind}
+        onChange={changeKind}
+        options={[
+          { value: 'despesa', label: t('kind.despesa'), icon: 'arrowUpRight' },
+          { value: 'receita', label: t('kind.receita'), icon: 'arrowDownLeft' },
+        ]}
+      />
+
+      <MoneyInput
+        label={form.parcelado ? t('form.valueTotal') : form.recorrente ? t('form.valueMonthly') : t('common.value')}
+        value={form.valorTotal}
+        onChange={(v) => set('valorTotal', v)}
+        error={errors.valor}
+        tone={isExpense ? colors.expense : colors.income}
+      />
+
+      <TextField
+        label={t('common.name')}
+        value={form.nome}
+        onChangeText={(v) => set('nome', v)}
+        placeholder={isExpense ? t('form.namePlaceholderExpense') : t('form.namePlaceholderIncome')}
+        error={errors.nome}
+        returnKeyType="next"
+        maxLength={60}
+      />
+
+      <TextField
+        label={t('form.description')}
+        value={form.descricao}
+        onChangeText={(v) => set('descricao', v)}
+        placeholder={t('form.descriptionPlaceholder')}
+        multiline
+        maxLength={280}
+      />
+
+      <View style={{ gap: 8 }}>
+        <AppText variant="label" color={colors.ink2}>
+          {t('form.mainCategory')}
         </AppText>
-        {isEditing ? <IconButton icon="trash" label="Excluir lançamento" color={colors.expense} onPress={confirmDelete} /> : null}
+        <View style={styles.wrap}>
+          {sameKind.map((c) => (
+            <Chip key={c.id} label={categoryName(c)} icon={c.icone} active={form.categoriaId === c.id} onPress={() => pickCategory(c.id)} />
+          ))}
+        </View>
+        <AppText variant="caption" color={colors.ink2}>
+          {t('form.mainCategoryHint')}
+        </AppText>
       </View>
 
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ padding: layout.screenPadding, gap: 18, paddingBottom: 24 }}
-        >
-          <Segmented
-            accessibilityLabel="Tipo de lançamento"
-            value={form.kind}
-            onChange={changeKind}
-            options={[
-              { value: 'despesa', label: 'Despesa', icon: 'arrowUpRight' },
-              { value: 'receita', label: 'Receita', icon: 'arrowDownLeft' },
-            ]}
-          />
-
-          <MoneyInput
-            label={form.parcelado ? 'Valor total da compra' : form.recorrente ? 'Valor mensal' : 'Valor'}
-            value={form.valorTotal}
-            onChange={(v) => set('valorTotal', v)}
-            error={errors.valor}
-            tone={isExpense ? colors.expense : colors.income}
-          />
-
-          <TextField
-            label="Nome"
-            value={form.nome}
-            onChangeText={(t) => set('nome', t)}
-            placeholder={isExpense ? 'Ex.: Mercado' : 'Ex.: Salário'}
-            error={errors.nome}
-            returnKeyType="next"
-            maxLength={60}
-          />
-
-          <TextField
-            label="Descrição (opcional)"
-            value={form.descricao}
-            onChangeText={(t) => set('descricao', t)}
-            placeholder="Detalhes, loja, observações…"
-            multiline
-            maxLength={280}
-          />
-
-          <View style={{ gap: 8 }}>
-            <AppText variant="label" color={colors.ink2}>
-              Categoria
-            </AppText>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-              {visibleCategories.map((c) => (
+      {tagOptions.length > 0 ? (
+        <View style={{ gap: 8 }}>
+          <AppText variant="label" color={colors.ink2}>
+            {t('form.alsoIn')}
+          </AppText>
+          <View style={styles.wrap}>
+            {tagOptions.map((c) => {
+              const active = form.etiquetas.includes(c.id);
+              return (
                 <Chip
                   key={c.id}
-                  label={c.nome}
-                  icon={c.icone}
-                  active={form.categoriaId === c.id}
-                  onPress={() => pickCategory(c.id)}
+                  tone="soft"
+                  label={categoryName(c)}
+                  icon={active ? 'check' : 'tag'}
+                  active={active}
+                  accessibilityLabel={t('form.tagA11y', { name: categoryName(c) })}
+                  onPress={() => toggleTag(c.id)}
                 />
-              ))}
-            </View>
+              );
+            })}
           </View>
+          <AppText variant="caption" color={colors.ink2}>
+            {isExpense && hasCardCategory ? `${t('form.alsoInHint')} ${t('form.cardAuto')}` : t('form.alsoInHint')}
+          </AppText>
+        </View>
+      ) : null}
 
-          <View style={{ gap: 8 }}>
-            <AppText variant="label" color={colors.ink2}>
-              Natureza
-            </AppText>
-            <Segmented
-              accessibilityLabel="Natureza do lançamento"
-              value={form.natureza}
-              onChange={(v) => set('natureza', v)}
-              options={[
-                { value: 'fixo', label: isExpense ? 'Gasto Fixo' : 'Fixa' },
-                { value: 'variavel', label: isExpense ? 'Gasto Variável' : 'Variável' },
-              ]}
-            />
-          </View>
+      <View style={{ gap: 8 }}>
+        <AppText variant="label" color={colors.ink2}>
+          {t('form.nature')}
+        </AppText>
+        <Segmented
+          accessibilityLabel={t('form.natureA11y')}
+          value={form.natureza}
+          onChange={(v) => set('natureza', v)}
+          options={[
+            { value: 'fixo', label: natureLabelFor('fixo', form.kind) },
+            { value: 'variavel', label: natureLabelFor('variavel', form.kind) },
+          ]}
+        />
+      </View>
 
-          <SelectField
-            label="Forma de pagamento"
-            value={form.forma}
-            onChange={(v) => set('forma', v)}
-            options={PAYMENT_ORDER.map((p) => ({ value: p, label: PAYMENT_LABEL[p] }))}
-          />
+      <SelectField
+        label={t('form.payment')}
+        value={form.forma}
+        onChange={changeForma}
+        options={PAYMENT_ORDER.map((p) => ({ value: p, label: paymentLabel(p) }))}
+      />
 
-          <DateField label={form.recorrente ? 'Primeiro mês (data)' : 'Data'} value={form.data} onChange={(d) => set('data', d)} />
+      <DateField label={form.recorrente ? t('form.firstMonth') : t('common.date')} value={form.data} onChange={(d) => set('data', d)} />
 
-          <View style={{ gap: 12 }}>
-            <SwitchRow
-              icon="repeat"
-              label="Repetir todo mês"
-              description={isExpense ? 'Aluguel, assinaturas, contas da casa…' : 'Salário, aluguel recebido, mesada…'}
-              value={form.recorrente}
-              onChange={setRecorrente}
-            />
+      <View style={{ gap: 12 }}>
+        <SwitchRow
+          icon="repeat"
+          label={t('form.repeat')}
+          description={isExpense ? t('form.repeatExpense') : t('form.repeatIncome')}
+          value={form.recorrente}
+          onChange={setRecorrente}
+        />
 
-            {form.recorrente ? (
-              <View style={styles.note}>
-                <Icon name="info" size={18} color={colors.tagText} />
-                <View style={{ flex: 1, gap: 8 }}>
-                  <AppText variant="label" color={colors.tagText}>
-                    {form.recorrenteAte
-                      ? `Repete de ${monthLabel(ymOf(form.data)).toLowerCase()} até ${monthLabel(form.recorrenteAte).toLowerCase()}.`
-                      : `Aparece automaticamente todo mês a partir de ${displayDate(form.data)}.`}
-                    {isEditing ? ' Alterações valem para todos os meses.' : ''}
-                  </AppText>
-                  {form.recorrenteAte ? (
-                    <Button
-                      variant="soft"
-                      icon="repeat"
-                      label="Voltar a repetir sem fim"
-                      onPress={() => set('recorrenteAte', undefined)}
-                      style={{ minHeight: 40 }}
-                    />
-                  ) : null}
-                </View>
-              </View>
-            ) : null}
-
-            {isExpense ? (
-              <SwitchRow
-                icon="card"
-                label="Compra parcelada"
-                description="Divide o valor total em parcelas mensais"
-                value={form.parcelado}
-                onChange={setParcelado}
-              />
-            ) : null}
-
-            {isExpense && form.parcelado ? (
-              <View style={{ gap: 14 }}>
-                <View style={{ flexDirection: 'row', gap: 12 }}>
-                  <View style={{ flex: 1 }}>
-                    <TextField
-                      label="Parcela atual"
-                      value={form.parcelaAtual}
-                      onChangeText={(t) => set('parcelaAtual', t.replace(/\D/g, '').slice(0, 3))}
-                      keyboardType="number-pad"
-                      error={errors.parcelaAtual}
-                    />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <TextField
-                      label="Total de parcelas"
-                      value={form.parcelasTotais}
-                      onChangeText={(t) => set('parcelasTotais', t.replace(/\D/g, '').slice(0, 3))}
-                      keyboardType="number-pad"
-                      error={errors.parcelasTotais}
-                    />
-                  </View>
-                </View>
-
-                {installmentInfo ? (
-                  <View accessible accessibilityLiveRegion="polite" style={[styles.note, styles.noteInstallment]}>
-                    <Icon name="info" size={18} color={colors.installmentText} />
-                    <View style={{ flex: 1, gap: 6 }}>
-                      <Tag tone="installment">{`Parcela ${atual} de ${total}`}</Tag>
-                      <AppText variant="label" color={colors.installmentText}>
-                        {`${brl(installmentInfo.monthly)} por mês · restam ${installmentInfo.left} (${brl(installmentInfo.remaining)})`}
-                      </AppText>
-                    </View>
-                  </View>
-                ) : null}
-              </View>
-            ) : null}
-          </View>
-
-          {needsDue ? (
-            <View style={{ gap: 6 }}>
-              <DateField
-                label={form.parcelado ? 'Vencimento da parcela' : 'Vencimento do boleto'}
-                value={form.vencimento}
-                onChange={(d) => set('vencimento', d)}
-              />
-              {errors.vencimento ? (
-                <AppText variant="caption" color={colors.expense} accessibilityLiveRegion="polite">
-                  {errors.vencimento}
-                </AppText>
+        {form.recorrente ? (
+          <View style={styles.note}>
+            <Icon name="info" size={18} color={colors.tagText} />
+            <View style={{ flex: 1, gap: 8 }}>
+              <AppText variant="label" color={colors.tagText}>
+                {(form.recorrenteAte
+                  ? t('form.repeatRange', { from: monthLabel(ymOf(form.data)), to: monthLabel(form.recorrenteAte) })
+                  : t('form.repeatFrom', { date: displayDate(form.data) })) + (isEditing ? ` ${t('form.repeatEditNote')}` : '')}
+              </AppText>
+              {form.recorrenteAte ? (
+                <Button
+                  variant="soft"
+                  compact
+                  icon="repeat"
+                  label={t('form.repeatForever')}
+                  onPress={() => set('recorrenteAte', undefined)}
+                />
               ) : null}
             </View>
-          ) : null}
-        </ScrollView>
+          </View>
+        ) : null}
 
-        <View
-          style={{
-            padding: layout.screenPadding,
-            paddingTop: 12,
-            borderTopWidth: 1,
-            borderTopColor: colors.line,
-            backgroundColor: colors.surface,
-          }}
-        >
-          <Button label={isEditing ? 'Salvar alterações' : 'Salvar lançamento'} icon="check" onPress={save} />
-        </View>
-      </KeyboardAvoidingView>
-    </Screen>
+        {isExpense ? (
+          <SwitchRow
+            icon="card"
+            label={t('form.installment')}
+            description={t('form.installmentHint')}
+            value={form.parcelado}
+            onChange={setParcelado}
+          />
+        ) : null}
+
+        {isExpense && form.parcelado ? (
+          <View style={{ gap: 14 }}>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <View style={{ flex: 1 }}>
+                <TextField
+                  label={t('form.currentInstallment')}
+                  value={form.parcelaAtual}
+                  onChangeText={(v) => set('parcelaAtual', v.replace(/\D/g, '').slice(0, 3))}
+                  keyboardType="number-pad"
+                  error={errors.parcelaAtual}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <TextField
+                  label={t('form.totalInstallments')}
+                  value={form.parcelasTotais}
+                  onChangeText={(v) => set('parcelasTotais', v.replace(/\D/g, '').slice(0, 3))}
+                  keyboardType="number-pad"
+                  error={errors.parcelasTotais}
+                />
+              </View>
+            </View>
+
+            {installmentInfo ? (
+              <View accessible accessibilityLiveRegion="polite" style={[styles.note, { backgroundColor: colors.installmentTint }]}>
+                <Icon name="info" size={18} color={colors.installmentText} />
+                <View style={{ flex: 1, gap: 6 }}>
+                  <Tag tone="installment">{t('form.installmentTag', { current: atual, total })}</Tag>
+                  <AppText variant="label" color={colors.installmentText}>
+                    {t('form.installmentInfo', {
+                      monthly: brl(installmentInfo.monthly),
+                      left: installmentInfo.left,
+                      remaining: brl(installmentInfo.remaining),
+                    })}
+                  </AppText>
+                </View>
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+      </View>
+
+      {needsDue ? (
+        <DateField
+          label={form.parcelado ? t('form.dueInstallment') : t('form.dueBoleto')}
+          value={form.vencimento}
+          onChange={(d) => set('vencimento', d)}
+          error={errors.vencimento}
+        />
+      ) : null}
+    </FormScreen>
   );
 }
 
-const styles = StyleSheet.create({
-  note: {
-    flexDirection: 'row',
-    gap: 10,
-    alignItems: 'flex-start',
-    backgroundColor: colors.tag,
-    borderRadius: 12,
-    padding: 12,
-  },
-  noteInstallment: { backgroundColor: colors.installmentTint },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    note: {
+      flexDirection: 'row',
+      gap: 10,
+      alignItems: 'flex-start',
+      backgroundColor: colors.tag,
+      borderRadius: 12,
+      padding: 12,
+    },
+  });

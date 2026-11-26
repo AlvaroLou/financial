@@ -85,6 +85,7 @@ interface FinanceState extends PersistedData {
 
   /* metas */
   addGoal: (input: GoalInput) => string;
+  updateGoal: (id: string, patch: Partial<GoalInput>) => void;
   removeGoal: (id: string) => Goal | undefined;
   restoreGoal: (goal: Goal) => void;
   /** soma `amount` à meta (sem passar do alvo) e devolve quanto foi de fato adicionado */
@@ -229,6 +230,9 @@ export const useFinanceStore = create<FinanceState>()(
         set((s) => ({ goals: [...s.goals, { ...input, id }] }));
         return id;
       },
+
+      updateGoal: (id, patch) =>
+        set((s) => ({ goals: s.goals.map((g) => (g.id === id ? { ...g, ...patch, id: g.id } : g)) })),
 
       removeGoal: (id) => {
         const found = get().goals.find((g) => g.id === id);

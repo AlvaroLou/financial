@@ -1,12 +1,15 @@
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { AlertsButton } from '@/components/AlertsButton';
 import { BalanceCard } from '@/components/BalanceCard';
 import { DueList } from '@/components/DueList';
+import { ModeSwitch } from '@/components/ModeSwitch';
 import { RecordItem } from '@/components/RecordItem';
 import { AppText } from '@/components/ui/AppText';
+import { Fab } from '@/components/ui/Fab';
 import { Button, Card, SectionHeader } from '@/components/ui/primitives';
 import { MonthSelector, Screen, ScreenHeader, ScreenScroll } from '@/components/ui/Screen';
 import { useHiddenValues } from '@/hooks/useHiddenValues';
@@ -16,17 +19,19 @@ import { todayISO } from '@/lib/clock';
 import { monthName, ymOf } from '@/lib/dates';
 import { dailyAllowance, upcomingDues } from '@/lib/finance';
 import { useFinanceStore } from '@/store/useFinanceStore';
-import { colors } from '@/theme/tokens';
+import { useTheme } from '@/theme/ThemeProvider';
 
-function greeting(date = new Date()): string {
+function greetingKey(date = new Date()): string {
   const h = date.getHours();
-  if (h < 5) return 'Boa noite!';
-  if (h < 12) return 'Bom dia!';
-  if (h < 18) return 'Boa tarde!';
-  return 'Boa noite!';
+  if (h < 5) return 'home.greetingEvening';
+  if (h < 12) return 'home.greetingMorning';
+  if (h < 18) return 'home.greetingAfternoon';
+  return 'home.greetingEvening';
 }
 
 export default function InicioScreen() {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
   const router = useRouter();
   const { edit } = useRecordActions();
   const { month, occurrences, summary, budget } = useMonthData();
@@ -43,11 +48,12 @@ export default function InicioScreen() {
   return (
     <Screen>
       <ScreenHeader
-        title={greeting()}
-        subtitle={`Seu resumo de ${monthName(month, ymOf(today))}`}
+        top={<ModeSwitch />}
+        title={t(greetingKey())}
+        subtitle={t('home.subtitle', { month: monthName(month, ymOf(today)) })}
         right={<AlertsButton />}
       />
-      <ScreenScroll gap={20}>
+      <ScreenScroll gap={20} withFabClearance>
         <MonthSelector />
 
         <BalanceCard
@@ -62,13 +68,9 @@ export default function InicioScreen() {
 
         {isEmpty ? (
           <Card style={{ padding: 20, gap: 14 }}>
-            <AppText variant="h3">Comece pelo seu primeiro lançamento</AppText>
-            {[
-              { n: '1', text: 'Cadastre seu salário e as contas fixas (aluguel, internet…) com “Repetir todo mês”.' },
-              { n: '2', text: 'Em Planejar, defina um limite para cada categoria — vira o orçamento do mês.' },
-              { n: '3', text: 'Lance os gastos do dia a dia no botão + e acompanhe quanto ainda pode gastar.' },
-            ].map((s) => (
-              <View key={s.n} style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
+            <AppText variant="h3">{t('home.emptyTitle')}</AppText>
+            {['home.step1', 'home.step2', 'home.step3'].map((key, i) => (
+              <View key={key} style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
                 <View
                   style={{
                     width: 24,
@@ -80,36 +82,36 @@ export default function InicioScreen() {
                   }}
                 >
                   <AppText variant="captionStrong" color={colors.primary}>
-                    {s.n}
+                    {String(i + 1)}
                   </AppText>
                 </View>
                 <AppText variant="body" color={colors.ink2} style={{ flex: 1 }}>
-                  {s.text}
+                  {t(key)}
                 </AppText>
               </View>
             ))}
-            <Button icon="plus" label="Novo lançamento" onPress={() => router.push('/registro')} />
+            <Button icon="plus" label={t('home.newEntry')} onPress={() => router.push('/registro')} />
           </Card>
         ) : (
           <>
             <View>
-              <SectionHeader title="Próximos vencimentos" />
+              <SectionHeader title={t('home.upcoming')} />
               <DueList dues={dues} onPressDue={(o) => edit(o.record.id, ymOf(o.data))} />
             </View>
 
             <View>
-              <SectionHeader title="Lançamentos recentes" actionLabel="Ver tudo" onAction={() => router.push('/extrato')} />
+              <SectionHeader title={t('home.recent')} actionLabel={t('common.seeAll')} onAction={() => router.push('/extrato')} />
               {recent.length === 0 ? (
                 <Card style={{ padding: 20 }}>
                   <AppText variant="body" color={colors.ink2} align="center">
-                    Nenhum lançamento neste mês. Toque no + para adicionar.
+                    {t('home.noneThisMonth')}
                   </AppText>
                 </Card>
               ) : (
                 <Card style={{ overflow: 'hidden' }}>
                   {recent.map((o, i) => (
                     <View key={o.key} style={i > 0 ? { borderTopWidth: 1, borderTopColor: colors.line } : undefined}>
-                      <RecordItem occurrence={o} category={categories[o.record.categoriaId]} showDate />
+                      <RecordItem occurrence={o} category={categories[o.record.categoriaId]} categories={categories} showDate />
                     </View>
                   ))}
                 </Card>
@@ -118,6 +120,8 @@ export default function InicioScreen() {
           </>
         )}
       </ScreenScroll>
+
+      <Fab label={t('home.newEntry')} onPress={() => router.push('/registro')} />
     </Screen>
   );
 }

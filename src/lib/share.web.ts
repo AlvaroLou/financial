@@ -1,19 +1,12 @@
 import * as Print from 'expo-print';
 
-import { buildCsv, buildPdfHtml, exportFileName } from '@/lib/export';
-import type { Category, Occurrence, YM } from '@/types';
-
 /** Navegador: baixa o CSV diretamente. */
-export async function exportCsv(
-  ym: YM,
-  occurrences: Occurrence[],
-  categories: Record<string, Category>,
-): Promise<boolean> {
-  const blob = new Blob([buildCsv(occurrences, categories)], { type: 'text/csv;charset=utf-8' });
+export async function shareCsv(content: string, fileName: string, _dialogTitle: string): Promise<boolean> {
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = exportFileName(ym, 'csv');
+  a.download = fileName;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -22,11 +15,7 @@ export async function exportCsv(
 }
 
 /** Navegador: abre a janela de impressão (o usuário escolhe "Salvar como PDF"). */
-export async function exportPdf(
-  ym: YM,
-  occurrences: Occurrence[],
-  categories: Record<string, Category>,
-): Promise<boolean> {
-  await Print.printAsync({ html: buildPdfHtml(ym, occurrences, categories) });
+export async function sharePdf(html: string, _fileName: string, _dialogTitle: string): Promise<boolean> {
+  await Print.printAsync({ html });
   return true;
 }

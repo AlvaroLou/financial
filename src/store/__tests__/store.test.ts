@@ -131,3 +131,44 @@ describe('migração de versões antigas', () => {
     expect(migrated.onboarded).toBe(true);
   });
 });
+
+describe('v4: categoria fixa "Cartão" e preferências novas', () => {
+  it('"Cartão" existe, não pode ser excluída nem renomeada (só ícone/limite)', () => {
+    expect(s().categories.some((c) => c.id === 'cartao' && c.fixa)).toBe(true);
+    expect(s().categoryRemoveBlock('cartao')).toBe('fixed');
+    expect(s().removeCategory('cartao')).toBe(false);
+    s().updateCategory('cartao', { nome: 'Outro nome', limiteMensal: 50_000, icone: 'cash' });
+    expect(s().categories.find((c) => c.id === 'cartao')).toMatchObject({ nome: 'Cartão', limiteMensal: 50_000, icone: 'cash' });
+  });
+
+  it('excluir uma categoria usada só como etiqueta tira a etiqueta dos lançamentos', () => {
+    const tag = s().addCategory({ nome: 'Viagem', icone: 'plane', kind: 'despesa', naturezaPadrao: 'variavel', limiteMensal: 0 });
+    const id = s().addRecord({ ...expense, etiquetas: [tag] });
+    expect(s().categoryRemoveBlock(tag)).toBeNull();
+    expect(s().removeCategory(tag)).toBe(true);
+    expect(s().records.find((r) => r.id === id)?.etiquetas).toEqual([]);
+  });
+
+  it('migra dados da v3: adiciona "Cartão" e completa as preferências', () => {
+    const migrate = useFinanceStore.persist.getOptions().migrate!;
+    const old = {
+      records: [],
+      categories: defaultCategories.filter((c) => c.id !== 'cartao'),
+      accounts: [],
+      cards: [],
+      goals: [],
+      settings: { diaFechamentoMes: 30, alertaVencimento: true, alertaOrcamento: false, biometria: false, ocultarSaldo: true },
+      onboarded: true,
+    };
+    const next = migrate(old, 3) as typeof old & { settings: Record<string, unknown> };
+    const ids = next.categories.map((c) => c.id);
+    expect(ids.indexOf('cartao')).toBe(ids.indexOf('outros') - 1);
+    expect(next.settings).toMatchObject({ alertaOrcamento: false, ocultarSaldo: true, themeMode: 'auto', appMode: 'orcamento', language: null });
+  });
+
+  it('"Apagar todos os dados" mantém as preferências (tema, cores, idioma, privacidade)', () => {
+    s().updateSettings({ themeMode: 'dark', accentInvest: '#C2185B', language: 'en', ocultarSaldo: true, alertaOrcamento: false });
+    s().eraseAllData();
+    expect(s().settings).toMatchObject({ themeMode: 'dark', accentInvest: '#C2185B', language: 'en', ocultarSaldo: true, alertaOrcamento: true });
+  });
+});

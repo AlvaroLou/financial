@@ -1,4 +1,6 @@
 import type { IconName } from '@/components/ui/Icon';
+import type { ThemeBase } from '@/theme/palette';
+import { OTHER_SERIES, SERIES } from '@/theme/tokens';
 
 import type { Asset, AssetClass, AssetGroup, AssetType, Indexer, QuoteSource, Valuation } from './types';
 
@@ -53,33 +55,39 @@ export const TYPE_GROUPS: { grupo: AssetGroup; tipos: AssetType[] }[] = [
   { grupo: 'outros', tipos: ['previdencia', 'outro'] },
 ];
 
-/** Ordem fixa das classes (cores dos gráficos e listas). */
+/**
+ * Ordem fixa das classes = ordem dos slots da paleta dos gráficos (theme/tokens SERIES).
+ * Previdência e Outros ficam no cinza de "Outros".
+ */
 export const CLASS_ORDER: AssetClass[] = [
   'renda_fixa',
-  'tesouro',
-  'fundos',
   'acoes',
   'fiis',
-  'etfs',
+  'tesouro',
   'exterior',
+  'etfs',
+  'fundos',
   'cripto',
   'previdencia',
   'outros',
 ];
 
-/** Cores das classes (ordem fixa; validadas no claro e no escuro, sempre com legenda). */
-export const CLASS_COLORS: Record<AssetClass, string> = {
-  renda_fixa: '#257DE0',
-  tesouro: '#0B8BA8',
-  fundos: '#6A4CE2',
-  acoes: '#008A17',
-  fiis: '#F2A600',
-  etfs: '#00B894',
-  exterior: '#EE7FAC',
-  cripto: '#F47230',
-  previdencia: '#9B59B6',
-  outros: '#7D8C85',
+const CLASS_SLOT: Partial<Record<AssetClass, number>> = {
+  renda_fixa: 0,
+  acoes: 1,
+  fiis: 2,
+  tesouro: 3,
+  exterior: 4,
+  etfs: 5,
+  fundos: 6,
+  cripto: 7,
 };
+
+/** Cor da classe no gráfico (a classe sempre tem a mesma cor). */
+export function classColor(classe: AssetClass, base: ThemeBase): string {
+  const slot = CLASS_SLOT[classe];
+  return slot === undefined ? OTHER_SERIES[base] : SERIES[base][slot];
+}
 
 export const isFixedIncome = (tipo: AssetType) => ASSET_TYPES[tipo].valuation === 'fixed';
 export const isQuoted = (tipo: AssetType) => ASSET_TYPES[tipo].valuation === 'quote';

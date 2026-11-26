@@ -5,15 +5,17 @@ import {
   addMonths,
   daysInMonth,
   diffDays,
-  dueLabel,
   groupLabel,
   monthLabel,
   monthName,
   shiftMonths,
 } from '@/lib/dates';
-import { buildCsv } from '@/lib/export';
+import { budgetMonthCsv, csvSeparator } from '@/lib/export';
+import { buildBudgetMonth } from '@/lib/reports';
+import i18n from '@/i18n';
+import { dueLabel } from '@/i18n/labels';
 import { brl, brlShort, brlSigned, digitsToCents, formatNumber, percent, spokenBrl } from '@/lib/money';
-import type { FinanceRecord, Occurrence } from '@/types';
+import type { FinanceRecord } from '@/types';
 
 describe('money', () => {
   it('formata em pt-BR sem depender de Intl', () => {
@@ -68,11 +70,12 @@ describe('dates', () => {
     expect(monthLabel('2026-11')).toBe('Novembro 2026');
     expect(monthName('2026-11')).toBe('novembro');
     expect(monthName('2025-12', '2026-01')).toBe('dezembro de 2025');
-    expect(groupLabel('2026-11-25', '2026-11-25')).toBe('Hoje, 25 novembro');
-    expect(groupLabel('2026-11-24', '2026-11-25')).toBe('Ontem, 24 novembro');
+    expect(groupLabel('2026-11-25', '2026-11-25')).toBe('Hoje, 25 de novembro');
+    expect(groupLabel('2026-11-24', '2026-11-25')).toBe('Ontem, 24 de novembro');
     expect(dueLabel(0)).toBe('vence hoje');
     expect(dueLabel(1)).toBe('vence amanhã');
     expect(dueLabel(4)).toBe('em 4 dias');
+    expect(dueLabel(-1)).toBe('venceu há 1 dia');
   });
 });
 
@@ -89,13 +92,14 @@ describe('export CSV', () => {
     categoriaId: 'alimentacao',
     parcelado: false,
   };
-  const occ: Occurrence = { key: 'x:2026-11', record, data: record.data, valor: record.valorTotal };
 
   it('usa BOM, ";" como separador, vírgula decimal e escapa aspas', () => {
-    const csv = buildCsv([occ], {});
+    const csv = budgetMonthCsv(buildBudgetMonth([record], '2026-11', { alimentacao: 'Alimentação' }), { alimentacao: 'Alimentação' }, i18n.t.bind(i18n) as never);
     expect(csv.charCodeAt(0)).toBe(0xfeff);
-    const [header, line] = csv.slice(1).split('\r\n');
-    expect(header.split(';')[0]).toBe('Data');
-    expect(line).toBe('21/11/2026;Despesa;"Jantar ""especial""; amigos";;Variável;Crédito;;-123,45');
+    expect(csvSeparator()).toBe(';');
+    const lines = csv.slice(1).split('\r\n');
+    expect(lines[0]).toBe('Orçamento · Novembro 2026');
+    expect(lines).toContain('Gastos (despesas);123,45');
+    expect(lines).toContain('21/11/2026;Despesa;"Jantar ""especial""; amigos";Alimentação;;Variável;Crédito;;-123,45');
   });
 });
